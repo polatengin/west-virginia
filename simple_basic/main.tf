@@ -113,54 +113,67 @@ resource "azurerm_container_registry" "acr" {
 data "azurerm_client_config" "current" {}
 
 resource "azapi_resource" "ai_foundry" {
-  type      = "Microsoft.MachineLearningServices/workspaces@2024-10-01"
-  name      = "hub-${local.base_name}-${local.unique_suffix}"
-  location  = azurerm_resource_group.rg.location
-  parent_id = azurerm_resource_group.rg.id
-  tags      = local.tags
+  type                      = "Microsoft.CognitiveServices/accounts@2025-06-01"
+  name                      = "hub-${local.base_name}-${local.unique_suffix}"
+  location                  = azurerm_resource_group.rg.location
+  parent_id                 = azurerm_resource_group.rg.id
+  schema_validation_enabled = false
+  tags                      = local.tags
 
   identity {
     type = "SystemAssigned"
   }
 
   body = {
-    kind = "Hub"
+    kind = "AIServices"
+    sku = {
+      name = "S0"
+    }
     properties = {
-      description         = "Simple AI Foundry Hub"
-      friendlyName        = "Simple AI Foundry"
+      disableLocalAuth = true
+
+      allowProjectManagement = true
+
+      customSubDomainName = "hub-${local.base_name}-${local.unique_suffix}"
+
       publicNetworkAccess = "Enabled"
 
-      keyVault            = azurerm_key_vault.kv.id
-      storageAccount      = azapi_resource.sa.id
-      containerRegistry   = azurerm_container_registry.acr.id
-      applicationInsights = azurerm_application_insights.ai.id
-    }
-    sku = {
-      name = "Basic"
-      tier = "Basic"
+      restore = false
     }
   }
+
+  depends_on = [
+    azapi_resource.sa,
+    azurerm_key_vault.kv,
+    azurerm_container_registry.acr,
+    azurerm_application_insights.ai
+  ]
 }
 
 resource "azapi_resource" "ai_project" {
-  type      = "Microsoft.MachineLearningServices/workspaces@2024-10-01"
-  name      = "proj-${local.base_name}-${local.unique_suffix}"
-  location  = azurerm_resource_group.rg.location
-  parent_id = azurerm_resource_group.rg.id
-  tags      = local.tags
-
-  identity {
-    type = "SystemAssigned"
-  }
+  type                      = "Microsoft.CognitiveServices/accounts/projects@2025-06-01"
+  name                      = "proj-${local.base_name}-${local.unique_suffix}"
+  parent_id                 = azapi_resource.ai_foundry.id
+  location                  = azurerm_resource_group.rg.location
+  schema_validation_enabled = false
+  tags                      = local.tags
 
   body = {
-    kind = "Project"
+    sku = {
+      name = "S0"
+    }
+    identity = {
+      type = "SystemAssigned"
+    }
     properties = {
-      description   = "Default AI Foundry Project"
-      friendlyName  = "Default Project"
-      hubResourceId = azapi_resource.ai_foundry.id
+      displayName = "Default Project"
+      description = "Default AI Foundry Project"
     }
   }
+
+  depends_on = [
+    azapi_resource.ai_foundry
+  ]
 }
 
 resource "azurerm_cognitive_account" "openai" {
