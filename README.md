@@ -84,12 +84,7 @@ After deployment, Terraform will display:
 
 1. Copy the `portal_url` from the Terraform output
 
-1. Open it in your browser, or run:
-
-   ```bash
-   terraform output -raw portal_url | xargs open  # macOS
-   terraform output -raw portal_url | xargs xdg-open  # Linux
-   ```
+1. Open it in the browser
 
 ## 🗑️ Clean Up
 
