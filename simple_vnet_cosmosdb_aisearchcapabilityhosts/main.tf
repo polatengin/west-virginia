@@ -44,7 +44,7 @@ locals {
   unique_suffix = random_string.suffix.result
   tags = {
     Environment = "Demo"
-    Purpose     = "Simple AI Foundry with VNet and Search and CosmosDB"
+    Purpose     = "Simple AI Foundry with VNet and Search and CosmosDB and Capability Hosts"
   }
 }
 
@@ -465,12 +465,35 @@ resource "azapi_resource" "ai_foundry" {
       publicNetworkAccess = "Enabled"
 
       restore = false
+
+      agentCapabilityHostConnections = [
+        {
+          name = "storage"
+          properties = {
+            connectionId = azapi_resource.sa.id
+          }
+        },
+        {
+          name = "cosmos"
+          properties = {
+            connectionId = azurerm_cosmosdb_account.cosmos.id
+          }
+        },
+        {
+          name = "search"
+          properties = {
+            connectionId = azapi_resource.search.id
+          }
+        }
+      ]
     }
   }
 
   depends_on = [
     azapi_resource.sa,
-    azurerm_application_insights.ai
+    azurerm_application_insights.ai,
+    azurerm_cosmosdb_account.cosmos,
+    azapi_resource.search
   ]
 }
 

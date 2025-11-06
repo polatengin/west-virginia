@@ -47,7 +47,7 @@ locals {
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_resource_group" "rg" {
-  name     = "rg-${local.base_name}-vnet-${local.unique_suffix}"
+  name     = "rg-${local.base_name}-${local.unique_suffix}"
   location = local.location
   tags     = local.tags
 }
